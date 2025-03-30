@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:mercadopago-test-payment": "node dist/mercadopago-test-payment/server/server.mjs"
+    "serve:ssr:mercadopago-test-payment": "node dist/mercadopago-test-payment/server/server.mjs",
+    "vercel-build": "ng build && node dist/mercadopago-test-payment/server/server.mjs"
   },
   "private": true,
   "dependencies": {
