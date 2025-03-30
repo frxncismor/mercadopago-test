@@ -7,6 +7,18 @@ import {
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MercadoPagoConfig, Payment, Preference } from 'mercadopago';
+const bodyParser = require('body-parser');
+
+const client = new MercadoPagoConfig({
+  accessToken: 'TEST-8204142312016245-032918-bff6d30183178f367a2152ab6cbe8166-174005798',
+  options: {
+    timeout: 5000,
+    idempotencyKey: 'abc'
+  }
+});
+
+const preference = new Preference(client);
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -36,6 +48,39 @@ app.use(
     redirect: false,
   }),
 );
+
+app.use(bodyParser.json());
+
+app.post('/create-payment-link', async (req, res) => {
+  const products = req.body.products;
+  console.log('create payment link server res: ', products)
+
+  const body = {
+    body: {
+      items: products,
+      binary_mode: true,
+      shipments: {
+        cost: 50,
+        mode: 'not_specified'
+      },
+      back_urls: {
+        success: 'http://localhost:4000/success',
+        pending: 'http://localhost:4000/pending',
+        failure: 'http://localhost:4000/failure',
+      },
+      auto_return: 'approved',
+      statement_descriptor: 'Esto es una descripción del negocio de prueba'
+    }
+  }
+
+  try {
+    const response = await preference.create(body);
+    res.json({ paymentLink: response.init_point });
+  } catch (error: any) {
+    console.error('Error al crear el pago:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
  * Handle all other requests by rendering the Angular application.
